@@ -2,18 +2,31 @@
 import AddBookButton from "@/components/AddBookButton";
 import BookCard from "@/components/BookCard/BookCard";
 import Navbar from "@/components/NavBar/Navbar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useBooks } from "@/context/BookContext";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 
 export default function Home() {
-  const { books, error, isFetching, removeBook } = useBooks();
+  const { books, error, isFetching, removeBook, dbInit } = useBooks();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+
   useEffect(() => {
     document.title = "Lazy Reader - Home";
   }, []);
 
-  if (isFetching) {
+  if (isFetching || !dbInit) {
     return (
       <>
         <Navbar />
@@ -54,9 +67,16 @@ export default function Home() {
   const filteredBooks = books.filter((book) =>
     book.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const handleDelete = async (id: string) => {
+  const confirmDelete = (id: string) => {
+    setSelectedBookId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedBookId) return;
+
     try {
-      await removeBook(id);
+      await removeBook(selectedBookId);
       toast.success("Book removed successfully.", {
         description: "The book was removed from your library.",
       });
@@ -65,6 +85,9 @@ export default function Home() {
       toast.error("Failed to remove book.", {
         description: "There was an error while removing the book.",
       });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedBookId(null);
     }
   };
   return (
@@ -86,11 +109,35 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-2 mt-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-6">
           {filteredBooks.map((book, index) => (
-            <BookCard book={book} handleDelete={handleDelete} key={index} />
+            <BookCard book={book} handleDelete={confirmDelete} key={index} />
           ))}
         </div>
         <Toaster />
       </main>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Book</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this book? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-500 hover:bg-red-600 active:bg-red-600 cursor-pointer"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
