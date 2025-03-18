@@ -87,10 +87,10 @@ const Navbar: React.FC<NavbarProps> = ({ children }) => {
                 </HybridTooltipTrigger>
                 <HybridTooltipContent className="w-full max-w-xs md:max-w-sm lg:max-w-md text-justify text-sm md:text-base md:text-center">
                   <span>
-                    Your books are saved in the browser as cached data. Cached
-                    Data is automatically and irregularly deleted according to
-                    the browser storage space, not recommended to store too much
-                    data.
+                    Your books are saved in the browser as cached data. The
+                    browser may automatically delete this data at any time,
+                    depending on available storage. I recommend not storing too
+                    many books here.
                   </span>
                 </HybridTooltipContent>
               </HybridTooltip>
